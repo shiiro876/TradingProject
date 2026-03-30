@@ -137,23 +137,16 @@ class TestSettings:
 class TestUtils:
     """Verify data fetching utilities and watchlist loading."""
 
-    def test_load_watchlist_from_file(self):
+    def test_load_watchlist_from_file(self, tmp_path):
         """load_watchlist should read symbols from a CSV file."""
         from core.utils import load_watchlist
 
-        # Create a temporary CSV file
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
-            f.write("Symbol,Name,Sector\n")
-            f.write("AAPL,Apple,Tech\n")
-            f.write("MSFT,Microsoft,Tech\n")
-            f.write("XOM,Exxon,Energy\n")
-            tmp_path = f.name
+        # Create a temporary CSV file using pytest's tmp_path fixture
+        csv_file = tmp_path / "test_watchlist.csv"
+        csv_file.write_text("Symbol,Name,Sector\nAAPL,Apple,Tech\nMSFT,Microsoft,Tech\nXOM,Exxon,Energy\n")
 
-        try:
-            symbols = load_watchlist(tmp_path)
-            assert symbols == ["AAPL", "MSFT", "XOM"]
-        finally:
-            os.unlink(tmp_path)
+        symbols = load_watchlist(str(csv_file))
+        assert symbols == ["AAPL", "MSFT", "XOM"]
 
     def test_load_watchlist_missing_file(self):
         """load_watchlist should raise FileNotFoundError for missing files."""
@@ -162,19 +155,15 @@ class TestUtils:
         with pytest.raises(FileNotFoundError):
             load_watchlist("/nonexistent/path/watchlist.csv")
 
-    def test_load_watchlist_missing_column(self):
+    def test_load_watchlist_missing_column(self, tmp_path):
         """load_watchlist should raise KeyError if 'Symbol' column is missing."""
         from core.utils import load_watchlist
 
-        with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as f:
-            f.write("Ticker,Name\nAAPL,Apple\n")
-            tmp_path = f.name
+        csv_file = tmp_path / "bad_watchlist.csv"
+        csv_file.write_text("Ticker,Name\nAAPL,Apple\n")
 
-        try:
-            with pytest.raises(KeyError):
-                load_watchlist(tmp_path)
-        finally:
-            os.unlink(tmp_path)
+        with pytest.raises(KeyError):
+            load_watchlist(str(csv_file))
 
     def test_load_default_watchlist(self):
         """The default watchlist.csv should exist and contain symbols."""
