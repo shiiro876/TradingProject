@@ -198,3 +198,38 @@ SECTOR_WEAK_THRESHOLD = -2.0     # Sector return < -2% = weak
 
 # Minimum rank change to flag sector rotation
 SECTOR_ROTATION_MIN_CHANGE = 3   # Must move ≥3 ranks to flag rotation
+
+# =============================================================================
+# 🛡️ TRAILING STOP SETTINGS — Module 4 configuration
+# =============================================================================
+
+# Default trailing stop method: "atr", "percentage", or "breakeven_then_trail"
+TRAILING_STOP_METHOD = "atr"
+
+# ATR-based trailing stop: trail distance = ATR × multiplier
+TRAILING_STOP_ATR_MULTIPLIER = 1.5
+
+# Percentage-based trailing stop: trail distance = price × percentage
+TRAILING_STOP_PERCENTAGE = 0.03  # 3% trailing stop distance
+
+# Breakeven trigger: move stop to breakeven once price reaches this multiple of R
+# E.g., 1.0 means move stop to entry when price moves 1R in your favor
+BREAKEVEN_TRIGGER_R_MULTIPLE = 1.0
+
+# "Never let a winner become a loser" — after breakeven is hit, keep stop at
+# entry + this small buffer to guarantee a scratch or tiny profit
+BREAKEVEN_BUFFER_PCT = 0.001  # 0.1% above entry
+
+# =============================================================================
+# 🎯 RISK MANAGER SETTINGS — Module 4 configuration
+# =============================================================================
+
+# Maximum number of open positions allowed in the SAME sector
+MAX_SECTOR_CONCENTRATION = 2
+
+# Maximum portfolio drawdown before halting all new trades permanently
+# (Requires manual reset — protects against systematic strategy failure)
+MAX_DRAWDOWN_PCT = 0.15  # 15% drawdown from peak → halt trading
+
+# Minimum account balance threshold (absolute floor — never trade below this)
+MIN_ACCOUNT_BALANCE = 500.0  # Safety floor in dollars

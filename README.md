@@ -23,7 +23,9 @@ TradingBot/
 ├── risk/                          # Risk management
 │   ├── __init__.py
 │   ├── position_sizer.py          # Position size calculator (2% rule)
-│   └── portfolio_risk.py          # Portfolio risk manager (max positions, daily limits)
+│   ├── portfolio_risk.py          # Portfolio risk manager (max positions, daily limits)
+│   ├── trailing_stop.py           # Trailing stop manager (ATR/pct/breakeven)
+│   └── risk_manager.py            # Master risk orchestrator (discipline engine)
 │
 ├── learning/                      # Learning & journaling
 │   ├── __init__.py
@@ -44,12 +46,14 @@ TradingBot/
 ├── tests/
 │   ├── test_module1.py            # 24 tests: scanner, indicators, utils
 │   ├── test_module2.py            # 40 tests: signals, position sizing, risk, journal
-│   └── test_module3.py            # 51 tests: news sentiment, macro sector analysis
+│   ├── test_module3.py            # 51 tests: news sentiment, macro sector analysis
+│   └── test_module4.py            # 59 tests: trailing stops, risk manager, drawdown
 │
 ├── docs/
 │   ├── module1_market_scanner.md          # Module 1 detailed documentation
 │   ├── module2_signals_risk_journal.md    # Module 2 detailed documentation
-│   └── module3_news_sentiment.md          # Module 3 detailed documentation
+│   ├── module3_news_sentiment.md          # Module 3 detailed documentation
+│   └── module4_risk_manager.md            # Module 4 detailed documentation
 │
 ├── .gitignore
 ├── requirements.txt
@@ -98,6 +102,20 @@ python -m core.news
 python -m core.macro
 ```
 
+### Module 4 — Risk Manager: The Discipline Engine (Phase 4) ✅
+
+**Files:** `risk/trailing_stop.py`, `risk/risk_manager.py`  
+**Docs:** [`docs/module4_risk_manager.md`](docs/module4_risk_manager.md)
+
+The "discipline engine" that prevents the trading system from blowing up. Adds trailing stops that ratchet upward to protect profits ("never let a winner become a loser"), sector concentration limits (max 2 positions per sector), drawdown monitoring (15% halt), and a master risk orchestrator that provides a single approve/deny gate for every trade.
+
+```python
+from risk.risk_manager import RiskManager
+rm = RiskManager(account_balance=10000)
+decision = rm.evaluate_trade("AAPL", entry_price=150, stop_loss=144,
+                             sector="Technology")
+```
+
 ---
 
 ## 🚀 Getting Started
@@ -129,7 +147,7 @@ cp config/.env.example config/.env
 ### Running Tests
 
 ```bash
-# Run all tests (115 total)
+# Run all tests (174 total)
 python -m pytest tests/ -v
 
 # Module 1 only (24 tests)
@@ -140,6 +158,9 @@ python -m pytest tests/test_module2.py -v
 
 # Module 3 only (51 tests)
 python -m pytest tests/test_module3.py -v
+
+# Module 4 only (59 tests)
+python -m pytest tests/test_module4.py -v
 ```
 
 ---
@@ -155,6 +176,10 @@ python -m pytest tests/test_module3.py -v
 | `MIN_RR_RATIO` | 1.5 | Only takes trades with favorable risk:reward |
 | `MAX_POSITION_SIZE` | 35% | Prevents concentration in one stock |
 | `ATR_STOP_MULTIPLIER` | 2.0 | Stop distance = ATR × 2 |
+| `TRAILING_STOP_ATR_MULTIPLIER` | 1.5 | Trailing stop distance = ATR × 1.5 |
+| `MAX_SECTOR_CONCENTRATION` | 2 | Max positions in same sector |
+| `MAX_DRAWDOWN_PCT` | 15% | Halt trading if account drops 15% from peak |
+| `MIN_ACCOUNT_BALANCE` | $500 | Never trade below this balance |
 
 ---
 
@@ -165,7 +190,7 @@ python -m pytest tests/test_module3.py -v
 | **1** | Market Scanner | Scans stocks, scores setups, returns top picks | ✅ Complete |
 | **2** | Signals & Risk | Trade setups, position sizing, portfolio risk, journal | ✅ Complete |
 | **3** | News & Sentiment | News sentiment analysis, sector rotation detection | ✅ Complete |
-| **4** | Risk Manager (Advanced) | Enhanced risk rules, trailing stops | ⬜ Planned |
+| **4** | Risk Manager (Advanced) | Trailing stops, sector concentration, drawdown monitoring | ✅ Complete |
 | **5** | Execution Engine | Places trades via Alpaca API | ⬜ Planned |
 | **6** | Learning Engine | ML model that learns from trade history | ⬜ Planned |
 | **7** | Dashboard & Alerts | Streamlit dashboard, Telegram notifications | ⬜ Planned |
