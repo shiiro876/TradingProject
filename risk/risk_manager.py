@@ -176,10 +176,11 @@ class RiskManager:
         position_value = 0.0
         risk_amount = 0.0
 
-        # Calculate risk:reward for logging
+        # Calculate risk per share for logging
         risk_per_share = entry_price - stop_loss if entry_price > stop_loss else 0
-        rr_ratio = round(risk_per_share / risk_per_share, 2) if risk_per_share > 0 else 0
-        # Note: R:R from signals is typically TP1/risk. Here we just validate risk > 0
+        # R:R ratio requires take-profit info from the signal generator.
+        # Here we record risk_per_share; actual R:R comes from signals.py.
+        rr_ratio = 0.0
 
         # Check 1: Account balance floor
         if self.account_balance < MIN_ACCOUNT_BALANCE:
