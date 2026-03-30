@@ -1,0 +1,47 @@
+# ============================================================================
+# .gitignore — TradingBot Project
+# Prevents sensitive data, cache files, and build artifacts from being tracked.
+# ============================================================================
+
+# --- Environment & Secrets ---
+# NEVER commit API keys or credentials
+config/.env
+.env
+
+# --- Python Cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# --- Distribution / Packaging ---
+dist/
+build/
+*.egg-info/
+*.egg
+
+# --- Virtual Environments ---
+venv/
+env/
+.venv/
+
+# --- IDE / Editor ---
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# --- OS Files ---
+.DS_Store
+Thumbs.db
+
+# --- Data files that may be generated at runtime ---
+data/daily_scan.csv
+data/signals.csv
+data/trades.csv
+data/performance.csv
+
+# --- Logs ---
+*.log
+logs/

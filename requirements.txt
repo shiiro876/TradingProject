@@ -1,0 +1,16 @@
+# =============================================================================
+# requirements.txt — TradingBot Dependencies
+# =============================================================================
+# Module 1 (Market Scanner) dependencies:
+#   - yfinance: Fetches historical and live stock market data from Yahoo Finance
+#   - pandas: Data manipulation and analysis (DataFrames)
+#   - pandas-ta: Technical analysis indicators (RSI, MACD, Bollinger, etc.)
+#   - numpy: Numerical computations
+#   - python-dotenv: Loads environment variables from .env file
+# =============================================================================
+
+yfinance>=0.2.36
+pandas>=2.0.0
+pandas-ta>=0.3.14b1
+numpy>=1.24.0
+python-dotenv>=1.0.0

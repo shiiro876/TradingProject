@@ -1,0 +1,388 @@
+# =============================================================================
+# core/indicators.py — Technical Analysis Indicator Engine
+# =============================================================================
+#
+# PURPOSE:
+#   Calculates all standard technical indicators on a stock's OHLCV DataFrame.
+#   Each indicator is computed using the pandas-ta library and returned as a
+#   dictionary of signal results (bullish/bearish/neutral plus raw values).
+#
+# INDICATORS COMPUTED:
+#   1. RSI  — Relative Strength Index (oversold/overbought detection)
+#   2. MACD — Moving Average Convergence Divergence (momentum crossovers)
+#   3. MA   — 50-day and 200-day Simple Moving Averages (trend direction)
+#   4. BB   — Bollinger Bands (volatility breakouts)
+#   5. VOL  — Volume analysis (surge detection vs. 20-day average)
+#   6. ATR  — Average True Range (volatility for stop-loss sizing)
+#
+# KEY FUNCTIONS:
+#   - calculate_rsi(df)         → RSI value + oversold/overbought flag
+#   - calculate_macd(df)        → MACD line, signal line, histogram, crossover
+#   - calculate_moving_averages(df) → 50MA, 200MA, price-above flags
+#   - calculate_bollinger_bands(df) → Upper/lower bands, breakout flag
+#   - calculate_volume_signal(df)   → Average volume, current ratio, surge flag
+#   - calculate_atr(df)         → ATR value for stop-loss calculation
+#   - calculate_all_indicators(df)  → Runs ALL of the above, returns combined dict
+#
+# USAGE:
+#   from core.indicators import calculate_all_indicators
+#   signals = calculate_all_indicators(df)  # df = OHLCV DataFrame
+#   print(signals["rsi_value"])       # e.g., 42.5
+#   print(signals["rsi_bullish"])     # True if RSI < 30 (oversold bounce)
+#
+# =============================================================================
+
+import logging
+
+import pandas as pd
+import pandas_ta as ta
+
+from config.settings import (
+    RSI_PERIOD, RSI_OVERSOLD, RSI_OVERBOUGHT,
+    MACD_FAST, MACD_SLOW, MACD_SIGNAL,
+    MA_SHORT, MA_LONG,
+    BB_PERIOD, BB_STD_DEV,
+    VOLUME_AVG_PERIOD, VOLUME_SURGE_MULTIPLIER,
+    ATR_PERIOD,
+)
+
+logger = logging.getLogger(__name__)
+
+
+def calculate_rsi(df: pd.DataFrame) -> dict:
+    """
+    Calculate the Relative Strength Index (RSI) for a stock.
+
+    RSI measures the speed and magnitude of recent price changes to evaluate
+    whether a stock is overbought or oversold.
+      - RSI < 30  → Oversold  (potential buying opportunity)
+      - RSI > 70  → Overbought (potential selling opportunity)
+      - RSI 30-70 → Neutral territory
+
+    Args:
+        df: OHLCV DataFrame with a 'Close' column and sufficient history.
+
+    Returns:
+        Dictionary containing:
+            rsi_value    (float): Current RSI value (0-100), or NaN if
+                                  insufficient data.
+            rsi_bullish  (bool):  True if RSI is at or below the oversold
+                                  threshold (potential bounce).
+            rsi_bearish  (bool):  True if RSI is at or above the overbought
+                                  threshold (potential reversal).
+    """
+    rsi_series = ta.rsi(df["Close"], length=RSI_PERIOD)
+
+    # Get the most recent RSI value (last row)
+    rsi_value = rsi_series.iloc[-1] if rsi_series is not None and len(rsi_series) > 0 else float("nan")
+
+    return {
+        "rsi_value": round(rsi_value, 2) if pd.notna(rsi_value) else None,
+        "rsi_bullish": bool(pd.notna(rsi_value) and rsi_value <= RSI_OVERSOLD),
+        "rsi_bearish": bool(pd.notna(rsi_value) and rsi_value >= RSI_OVERBOUGHT),
+    }
+
+
+def calculate_macd(df: pd.DataFrame) -> dict:
+    """
+    Calculate the MACD (Moving Average Convergence Divergence) indicator.
+
+    MACD is a trend-following momentum indicator that shows the relationship
+    between two exponential moving averages (EMAs) of a stock's price.
+      - Bullish crossover: MACD line crosses ABOVE signal line → buy signal
+      - Bearish crossover: MACD line crosses BELOW signal line → sell signal
+
+    The histogram (MACD line - Signal line) represents momentum strength.
+
+    Args:
+        df: OHLCV DataFrame with a 'Close' column and >= MACD_SLOW + MACD_SIGNAL
+            rows of history.
+
+    Returns:
+        Dictionary containing:
+            macd_value      (float): Current MACD line value.
+            macd_signal     (float): Current signal line value.
+            macd_histogram  (float): Current histogram value (MACD - Signal).
+            macd_bullish    (bool):  True if a bullish crossover just occurred
+                                     (MACD crossed above signal in last 2 bars).
+    """
+    macd_df = ta.macd(df["Close"], fast=MACD_FAST, slow=MACD_SLOW, signal=MACD_SIGNAL)
+
+    if macd_df is None or macd_df.empty:
+        return {
+            "macd_value": None,
+            "macd_signal": None,
+            "macd_histogram": None,
+            "macd_bullish": False,
+        }
+
+    # Column names generated by pandas_ta: MACD_12_26_9, MACDs_12_26_9, MACDh_12_26_9
+    macd_col = f"MACD_{MACD_FAST}_{MACD_SLOW}_{MACD_SIGNAL}"
+    signal_col = f"MACDs_{MACD_FAST}_{MACD_SLOW}_{MACD_SIGNAL}"
+    hist_col = f"MACDh_{MACD_FAST}_{MACD_SLOW}_{MACD_SIGNAL}"
+
+    macd_val = macd_df[macd_col].iloc[-1] if macd_col in macd_df.columns else float("nan")
+    signal_val = macd_df[signal_col].iloc[-1] if signal_col in macd_df.columns else float("nan")
+    hist_val = macd_df[hist_col].iloc[-1] if hist_col in macd_df.columns else float("nan")
+
+    # Detect bullish crossover: histogram flips from negative to positive
+    # (MACD line crossed above signal line in the most recent bar)
+    bullish_crossover = False
+    if hist_col in macd_df.columns and len(macd_df) >= 2:
+        prev_hist = macd_df[hist_col].iloc[-2]
+        curr_hist = macd_df[hist_col].iloc[-1]
+        if pd.notna(prev_hist) and pd.notna(curr_hist):
+            bullish_crossover = prev_hist < 0 and curr_hist >= 0
+
+    return {
+        "macd_value": round(macd_val, 4) if pd.notna(macd_val) else None,
+        "macd_signal": round(signal_val, 4) if pd.notna(signal_val) else None,
+        "macd_histogram": round(hist_val, 4) if pd.notna(hist_val) else None,
+        "macd_bullish": bullish_crossover,
+    }
+
+
+def calculate_moving_averages(df: pd.DataFrame) -> dict:
+    """
+    Calculate the 50-day and 200-day Simple Moving Averages (SMA).
+
+    Moving averages smooth out price data to identify trend direction:
+      - Price above BOTH 50MA and 200MA → Strong uptrend (bullish)
+      - 50MA above 200MA → "Golden cross" (long-term bullish)
+      - Price below both → Downtrend (bearish)
+
+    Args:
+        df: OHLCV DataFrame with a 'Close' column. Needs >= MA_LONG rows
+            for the 200-day MA to be valid.
+
+    Returns:
+        Dictionary containing:
+            ma_short_value     (float): Current 50-day SMA value.
+            ma_long_value      (float): Current 200-day SMA value.
+            price_above_short  (bool):  True if current price > 50-day SMA.
+            price_above_long   (bool):  True if current price > 200-day SMA.
+            price_above_ma     (bool):  True if price is above BOTH MAs
+                                        (strong bullish trend confirmation).
+            golden_cross       (bool):  True if 50MA > 200MA.
+    """
+    ma_short = ta.sma(df["Close"], length=MA_SHORT)
+    ma_long = ta.sma(df["Close"], length=MA_LONG)
+
+    current_price = df["Close"].iloc[-1]
+    ma_short_val = ma_short.iloc[-1] if ma_short is not None and len(ma_short) > 0 else float("nan")
+    ma_long_val = ma_long.iloc[-1] if ma_long is not None and len(ma_long) > 0 else float("nan")
+
+    price_above_short = bool(pd.notna(ma_short_val) and current_price > ma_short_val)
+    price_above_long = bool(pd.notna(ma_long_val) and current_price > ma_long_val)
+
+    return {
+        "ma_short_value": round(ma_short_val, 2) if pd.notna(ma_short_val) else None,
+        "ma_long_value": round(ma_long_val, 2) if pd.notna(ma_long_val) else None,
+        "price_above_short": price_above_short,
+        "price_above_long": price_above_long,
+        "price_above_ma": price_above_short and price_above_long,
+        "golden_cross": bool(
+            pd.notna(ma_short_val) and pd.notna(ma_long_val) and ma_short_val > ma_long_val
+        ),
+    }
+
+
+def calculate_bollinger_bands(df: pd.DataFrame) -> dict:
+    """
+    Calculate Bollinger Bands for volatility and breakout detection.
+
+    Bollinger Bands consist of:
+      - Middle band: 20-period SMA
+      - Upper band:  Middle + (2 × standard deviation)
+      - Lower band:  Middle - (2 × standard deviation)
+
+    When price breaks above the upper band, it signals strong upward momentum
+    (breakout). When price drops below the lower band, it may signal oversold.
+
+    Args:
+        df: OHLCV DataFrame with a 'Close' column and >= BB_PERIOD rows.
+
+    Returns:
+        Dictionary containing:
+            bb_upper       (float): Current upper Bollinger Band value.
+            bb_middle      (float): Current middle band (SMA) value.
+            bb_lower       (float): Current lower Bollinger Band value.
+            bb_breakout    (bool):  True if current price > upper band (bullish
+                                    breakout signal).
+            bb_oversold    (bool):  True if current price < lower band.
+    """
+    bb_df = ta.bbands(df["Close"], length=BB_PERIOD, std=BB_STD_DEV)
+
+    if bb_df is None or bb_df.empty:
+        return {
+            "bb_upper": None,
+            "bb_middle": None,
+            "bb_lower": None,
+            "bb_breakout": False,
+            "bb_oversold": False,
+        }
+
+    # Column names from pandas_ta: BBU_20_2.0, BBM_20_2.0, BBL_20_2.0
+    upper_col = f"BBU_{BB_PERIOD}_{BB_STD_DEV}"
+    middle_col = f"BBM_{BB_PERIOD}_{BB_STD_DEV}"
+    lower_col = f"BBL_{BB_PERIOD}_{BB_STD_DEV}"
+
+    bb_upper = bb_df[upper_col].iloc[-1] if upper_col in bb_df.columns else float("nan")
+    bb_middle = bb_df[middle_col].iloc[-1] if middle_col in bb_df.columns else float("nan")
+    bb_lower = bb_df[lower_col].iloc[-1] if lower_col in bb_df.columns else float("nan")
+
+    current_price = df["Close"].iloc[-1]
+
+    return {
+        "bb_upper": round(bb_upper, 2) if pd.notna(bb_upper) else None,
+        "bb_middle": round(bb_middle, 2) if pd.notna(bb_middle) else None,
+        "bb_lower": round(bb_lower, 2) if pd.notna(bb_lower) else None,
+        "bb_breakout": bool(pd.notna(bb_upper) and current_price > bb_upper),
+        "bb_oversold": bool(pd.notna(bb_lower) and current_price < bb_lower),
+    }
+
+
+def calculate_volume_signal(df: pd.DataFrame) -> dict:
+    """
+    Analyze trading volume to detect unusual activity (volume surges).
+
+    A volume surge indicates heightened interest in a stock, which often
+    precedes significant price moves. We compare today's volume to the
+    20-day average volume:
+      - Volume >= 2× average → Surge detected (strong interest)
+      - Volume ratio > 1.5× → Elevated (moderate interest)
+
+    Args:
+        df: OHLCV DataFrame with a 'Volume' column and >= VOLUME_AVG_PERIOD rows.
+
+    Returns:
+        Dictionary containing:
+            volume_current  (int):   Most recent volume value.
+            volume_average  (float): 20-day average volume.
+            volume_ratio    (float): Current volume / average volume.
+            volume_surge    (bool):  True if volume ratio >= surge threshold
+                                     (default 2.0×).
+    """
+    current_volume = df["Volume"].iloc[-1]
+
+    # Calculate the average volume over the lookback period
+    avg_volume = df["Volume"].rolling(window=VOLUME_AVG_PERIOD).mean().iloc[-1]
+
+    if pd.isna(avg_volume) or avg_volume == 0:
+        return {
+            "volume_current": int(current_volume),
+            "volume_average": None,
+            "volume_ratio": None,
+            "volume_surge": False,
+        }
+
+    volume_ratio = current_volume / avg_volume
+
+    return {
+        "volume_current": int(current_volume),
+        "volume_average": round(avg_volume, 0),
+        "volume_ratio": round(volume_ratio, 2),
+        "volume_surge": bool(volume_ratio >= VOLUME_SURGE_MULTIPLIER),
+    }
+
+
+def calculate_atr(df: pd.DataFrame) -> dict:
+    """
+    Calculate the Average True Range (ATR) for volatility measurement.
+
+    ATR measures market volatility by decomposing the entire range of an
+    asset price for a given period. It is primarily used to:
+      - Set stop-loss distances:  stop = entry - (ATR × multiplier)
+      - Gauge position sizing:    higher ATR → wider stops → fewer shares
+      - Filter stocks:            very high ATR may indicate excessive risk
+
+    Args:
+        df: OHLCV DataFrame with High, Low, Close columns and >= ATR_PERIOD rows.
+
+    Returns:
+        Dictionary containing:
+            atr_value      (float): Current ATR value (in price units).
+            atr_percent    (float): ATR as a percentage of current price,
+                                    useful for comparing volatility across
+                                    stocks at different price levels.
+    """
+    atr_series = ta.atr(df["High"], df["Low"], df["Close"], length=ATR_PERIOD)
+
+    atr_value = atr_series.iloc[-1] if atr_series is not None and len(atr_series) > 0 else float("nan")
+    current_price = df["Close"].iloc[-1]
+
+    atr_pct = (atr_value / current_price * 100) if (pd.notna(atr_value) and current_price > 0) else float("nan")
+
+    return {
+        "atr_value": round(atr_value, 4) if pd.notna(atr_value) else None,
+        "atr_percent": round(atr_pct, 2) if pd.notna(atr_pct) else None,
+    }
+
+
+def calculate_all_indicators(df: pd.DataFrame) -> dict:
+    """
+    Run ALL technical indicators on a single stock's OHLCV DataFrame.
+
+    This is the main entry point for the indicator engine. It calls each
+    individual indicator function and merges all results into a single flat
+    dictionary.
+
+    Args:
+        df: OHLCV DataFrame (must have Open, High, Low, Close, Volume columns).
+            Should contain at least 200 rows for all indicators to compute
+            properly (200-day MA needs 200 data points).
+
+    Returns:
+        Combined dictionary with all indicator values and signal flags.
+        Keys include: rsi_value, rsi_bullish, macd_bullish, price_above_ma,
+        bb_breakout, volume_surge, atr_value, etc.
+
+        Returns a dict of None values with all flags False if the input
+        DataFrame is too small to compute any indicators.
+    """
+    # Minimum data check: need at least RSI_PERIOD + 1 rows for basic indicators
+    min_rows = RSI_PERIOD + 1
+    if df is None or len(df) < min_rows:
+        logger.warning(
+            "Insufficient data (%d rows). Need at least %d for basic indicators.",
+            len(df) if df is not None else 0,
+            min_rows,
+        )
+        return _empty_indicator_result()
+
+    # Calculate each indicator group independently
+    result = {}
+    result.update(calculate_rsi(df))
+    result.update(calculate_macd(df))
+    result.update(calculate_moving_averages(df))
+    result.update(calculate_bollinger_bands(df))
+    result.update(calculate_volume_signal(df))
+    result.update(calculate_atr(df))
+
+    # Add the current closing price for reference
+    result["current_price"] = round(df["Close"].iloc[-1], 2)
+
+    return result
+
+
+def _empty_indicator_result() -> dict:
+    """
+    Return a dictionary with all indicator keys set to None / False.
+
+    Used as a fallback when there is insufficient data to compute indicators,
+    ensuring downstream code always receives a consistent key set.
+    """
+    return {
+        "rsi_value": None, "rsi_bullish": False, "rsi_bearish": False,
+        "macd_value": None, "macd_signal": None, "macd_histogram": None,
+        "macd_bullish": False,
+        "ma_short_value": None, "ma_long_value": None,
+        "price_above_short": False, "price_above_long": False,
+        "price_above_ma": False, "golden_cross": False,
+        "bb_upper": None, "bb_middle": None, "bb_lower": None,
+        "bb_breakout": False, "bb_oversold": False,
+        "volume_current": None, "volume_average": None,
+        "volume_ratio": None, "volume_surge": False,
+        "atr_value": None, "atr_percent": None,
+        "current_price": None,
+    }
