@@ -2,92 +2,92 @@
 
 An automated stock trading system built in Python that scans markets, identifies trade setups, manages risk, executes trades, and learns from every trade over time.
 
----
-
-## 📦 Module 1 — Market Scanner (Phase 1 / Stage 1)
-
-**Status:** ✅ Complete  
-**Purpose:** Scans 50+ stocks every day, runs technical analysis on each one, scores them based on bullish signals, and returns the top 5 stocks to watch with plain-English reasoning.
-
-This module replaces the manual process of checking charts one by one. It automates what a trader does each morning: evaluate price action, volume, momentum indicators, and trend direction to find the best trade candidates.
+> **Full module documentation lives in the [`docs/`](docs/) folder.**
 
 ---
 
-### 🏗️ Project Structure
+## 🏗️ Project Structure
 
 ```
 TradingBot/
 │
-├── core/                        # Core trading logic (analysis & scanning)
-│   ├── __init__.py              # Package docstring
-│   ├── utils.py                 # Market data fetching pipeline (yfinance)
-│   ├── indicators.py            # Technical indicator calculations
-│   └── scanner.py               # Stock scanning, scoring & ranking engine
+├── core/                          # Core trading logic
+│   ├── __init__.py
+│   ├── utils.py                   # Market data pipeline (yfinance)
+│   ├── indicators.py              # Technical indicator calculations
+│   ├── scanner.py                 # Stock scanning, scoring & ranking
+│   └── signals.py                 # Trade signal generator (entry/stop/targets)
 │
-├── config/                      # Configuration & settings
-│   ├── __init__.py              # Package docstring
-│   ├── settings.py              # All strategy parameters & safety rules
-│   └── .env.example             # API key template (copy to .env)
+├── risk/                          # Risk management
+│   ├── __init__.py
+│   ├── position_sizer.py          # Position size calculator (2% rule)
+│   └── portfolio_risk.py          # Portfolio risk manager (max positions, daily limits)
 │
-├── data/                        # Data storage
-│   ├── __init__.py              # Package docstring
-│   └── watchlist.csv            # Stock universe (50 S&P 500 stocks)
+├── learning/                      # Learning & journaling
+│   ├── __init__.py
+│   └── journal.py                 # Automated trade journal + performance stats
 │
-├── risk/                        # Risk management (Module 2 — placeholder)
-├── execution/                   # Trade execution (Module 5 — placeholder)
-├── learning/                    # ML learning engine (Module 6 — placeholder)
-├── dashboard/                   # Dashboard & alerts (Module 7 — placeholder)
+├── config/                        # Configuration
+│   ├── __init__.py
+│   ├── settings.py                # All strategy parameters & safety rules
+│   └── .env.example               # API key template (copy to .env)
+│
+├── data/                          # Data storage
+│   ├── __init__.py
+│   └── watchlist.csv              # Stock universe (50 S&P 500 stocks)
+│
+├── execution/                     # Trade execution (Module 5 — placeholder)
+├── dashboard/                     # Dashboard & alerts (Module 7 — placeholder)
 │
 ├── tests/
-│   └── test_module1.py          # 24 unit tests covering all Module 1 code
+│   ├── test_module1.py            # 24 tests: scanner, indicators, utils
+│   └── test_module2.py            # 40 tests: signals, position sizing, risk, journal
 │
-├── .gitignore                   # Excludes .env, __pycache__, generated data
-├── requirements.txt             # Python dependencies
-├── Trading Source of truth .docx  # Original project specification document
-└── README.md                    # This file
+├── docs/
+│   ├── module1_market_scanner.md  # Module 1 detailed documentation
+│   └── module2_signals_risk_journal.md  # Module 2 detailed documentation
+│
+├── .gitignore
+├── requirements.txt
+├── Trading Source of truth .docx  # Original project specification
+└── README.md                      # This file
 ```
 
 ---
 
-### 📊 What Module 1 Does
+## 📦 Completed Modules
 
-1. **Loads Stock Universe** — Reads `data/watchlist.csv` containing 50 diversified S&P 500 stocks across Technology, Energy, Healthcare, Financials, Industrials, Consumer Staples, Utilities, and Communication Services sectors.
+### Module 1 — Market Scanner (Phase 1) ✅
 
-2. **Fetches Market Data** — Downloads 3 months of daily OHLCV (Open, High, Low, Close, Volume) data from Yahoo Finance using the `yfinance` library.
+**Files:** `core/utils.py`, `core/indicators.py`, `core/scanner.py`  
+**Docs:** [`docs/module1_market_scanner.md`](docs/module1_market_scanner.md)
 
-3. **Calculates Technical Indicators** — For each stock, computes:
-   | Indicator | What It Measures | Bullish Signal |
-   |-----------|-----------------|----------------|
-   | **RSI (14)** | Overbought/oversold momentum | RSI ≤ 30 (oversold bounce) |
-   | **MACD (12/26/9)** | Momentum crossovers | MACD crosses above signal line |
-   | **50-day & 200-day SMA** | Trend direction | Price above both MAs |
-   | **Bollinger Bands (20, 2σ)** | Volatility breakouts | Price > upper band |
-   | **Volume Analysis** | Unusual activity | Volume ≥ 2× 20-day average |
-   | **ATR (14)** | Volatility / stop-loss sizing | ATR% between 1%–5% |
+Scans 50+ stocks daily, runs 6 technical indicators (RSI, MACD, MA, Bollinger Bands, Volume, ATR), scores each stock 0–10, and returns the top 5 picks with plain-English reasoning.
 
-4. **Scores Each Stock (0–10)** — Assigns weighted points for each bullish signal detected:
-   - RSI oversold: +2.0 pts
-   - MACD crossover: +2.0 pts
-   - Price above MAs: +1.5 pts
-   - Bollinger breakout: +1.5 pts
-   - Volume surge: +2.0 pts
-   - Favorable ATR: +1.0 pts
-   - **Maximum possible score: 10.0**
+```bash
+python -m core.scanner
+```
 
-5. **Returns Top 5 Stocks** — Ranks all stocks by score and returns the top 5 with a plain-English reason, e.g.:
-   > "Strong buy: RSI oversold (28.5) + MACD bullish crossover + Volume surge (2.8x avg)"
+### Module 2 — Signals, Risk & Trade Journal (Phase 2) ✅
 
-6. **Saves Results** — Writes scan output to `data/daily_scan_YYYY-MM-DD.csv` and `data/daily_scan.csv` (latest).
+**Files:** `core/signals.py`, `risk/position_sizer.py`, `risk/portfolio_risk.py`, `learning/journal.py`  
+**Docs:** [`docs/module2_signals_risk_journal.md`](docs/module2_signals_risk_journal.md)
+
+Generates complete trade setups (entry, stop loss, TP1, TP2, R:R ratio), calculates exact position sizes using the 2% risk rule, enforces portfolio constraints (3 max positions, 5% daily loss limit), and automatically logs every trade with comprehensive performance statistics.
+
+```bash
+python -m core.signals
+```
 
 ---
 
-### 🚀 Getting Started
+## 🚀 Getting Started
 
-#### Prerequisites
-- Python 3.11+ installed
+### Prerequisites
+- Python 3.11+
 - pip (Python package manager)
 
-#### Installation
+### Installation
 
 ```bash
 # 1. Clone the repository
@@ -104,99 +104,25 @@ pip install -r requirements.txt
 
 # 4. Set up environment variables
 cp config/.env.example config/.env
-# Edit config/.env with your API keys (not needed for Module 1)
+# Edit config/.env with your API keys (not needed for Modules 1-2)
 ```
 
-#### Running the Scanner
+### Running Tests
 
 ```bash
-# Run the market scanner from the project root
-python -m core.scanner
-```
+# Run all tests (64 total)
+python -m pytest tests/ -v
 
-**Example Output:**
-```
-🔍 Starting Market Scanner...
-
-================================================================================
-  📊 DAILY MARKET SCAN — 2026-03-30 10:00
-================================================================================
-  #   Symbol   Score   Price       RSI   MACD      Volume   Reason
---------------------------------------------------------------------------------
-  1   XOM      8.0     $112.50    28.5   Bullish   Surge    Strong buy: RSI oversold + MACD crossover + Volume surge
-  2   HAL      7.5     $38.20     32.1   Bullish   Surge    Strong buy: MACD crossover + Volume surge + Price above 50MA
-  3   CVX      6.0     $158.90    45.2   Bullish   Normal   Moderate buy: MACD crossover + Price above 50MA & 200MA
-  4   CAT      5.5     $342.10    48.0   Neutral   Surge    Moderate buy: Volume surge + Price above 50MA & 200MA
-  5   NVDA     5.0     $890.25    52.3   Neutral   Normal   Moderate buy: Price above 50MA & 200MA + Bollinger breakout
-================================================================================
-```
-
-#### Running Tests
-
-```bash
-# Run all 24 Module 1 tests
+# Module 1 only (24 tests)
 python -m pytest tests/test_module1.py -v
+
+# Module 2 only (40 tests)
+python -m pytest tests/test_module2.py -v
 ```
 
 ---
 
-### 📁 File-by-File Documentation
-
-#### `config/settings.py`
-Central configuration file. Contains:
-- **Safety rules** — Hard-coded risk limits (2% max risk per trade, 3 max positions, 5% daily loss limit, paper trading mode ON by default)
-- **Scanner settings** — Top N count (5), data period (3 months), data interval (daily)
-- **Indicator parameters** — RSI period (14), MACD (12/26/9), MA periods (50/200), Bollinger Bands (20, 2σ), Volume average (20-day), ATR period (14)
-- **Score weights** — How many points each bullish signal contributes to the score
-
-#### `core/utils.py`
-Data access layer. Functions:
-- `get_stock_data(symbol, period, interval)` — Downloads OHLCV data for one stock via yfinance
-- `get_multiple_stocks(symbols, period, interval)` — Batch downloads for a list of symbols
-- `load_watchlist(csv_path)` — Reads stock symbols from a CSV file
-
-#### `core/indicators.py`
-Technical analysis engine. Functions:
-- `calculate_rsi(df)` — RSI with oversold/overbought flags
-- `calculate_macd(df)` — MACD with bullish crossover detection
-- `calculate_moving_averages(df)` — 50MA, 200MA, golden cross detection
-- `calculate_bollinger_bands(df)` — Upper/lower bands, breakout detection
-- `calculate_volume_signal(df)` — Volume ratio and surge detection
-- `calculate_atr(df)` — Average True Range for volatility measurement
-- `calculate_all_indicators(df)` — Runs all of the above, returns combined dict
-
-#### `core/scanner.py`
-Scanning and scoring engine. Functions:
-- `score_stock(indicators)` — Converts indicator signals to a 0–10 score
-- `generate_reason(indicators, score)` — Builds plain-English explanation
-- `scan_stock(symbol, df)` — Full analysis for one stock
-- `run_full_scan(symbols, period, interval, top_n)` — End-to-end scan pipeline
-- `save_scan_results(results, output_dir)` — Saves to dated CSV
-- `print_scan_report(results)` — Formatted console output
-
-#### `data/watchlist.csv`
-The stock universe containing 50 diversified stocks across 8 sectors:
-- Technology (10): AAPL, MSFT, GOOGL, AMZN, META, NVDA, TSLA, AMD, INTC
-- Energy (7): XOM, CVX, HAL, SLB, COP, OXY, MRO
-- Healthcare (7): JNJ, UNH, PFE, ABBV, MRK, LLY, TMO
-- Financials (6): JPM, V, MA, BAC, GS, WFC
-- Industrials (7): CAT, DE, BA, HON, UNP, CMC, GE, LMT
-- Consumer Staples (5): PG, KO, PEP, WMT, COST
-- Utilities (4): NEE, DUK, SO, AEP
-- Communication Services (4): T, VZ, DIS, NFLX
-
-#### `tests/test_module1.py`
-24 unit tests organized into 4 test classes:
-- **TestSettings** (4 tests) — Validates all configuration constants
-- **TestUtils** (4 tests) — Tests data loading and watchlist parsing
-- **TestIndicators** (8 tests) — Tests each indicator + combined + edge cases
-- **TestScanner** (8 tests) — Tests scoring, reasoning, scan pipeline, CSV output
-
----
-
-### 🔒 Safety Rules (Hard-Coded)
-
-These safety parameters are defined in `config/settings.py` and should not be changed without careful validation:
+## 🔒 Safety Rules (Hard-Coded)
 
 | Rule | Value | Purpose |
 |------|-------|---------|
@@ -206,24 +132,25 @@ These safety parameters are defined in `config/settings.py` and should not be ch
 | `DAILY_LOSS_LIMIT` | 5% | Stops trading if daily loss exceeds this |
 | `MIN_RR_RATIO` | 1.5 | Only takes trades with favorable risk:reward |
 | `MAX_POSITION_SIZE` | 35% | Prevents concentration in one stock |
+| `ATR_STOP_MULTIPLIER` | 2.0 | Stop distance = ATR × 2 |
 
 ---
 
-### 🗺️ Build Roadmap — Upcoming Modules
+## 🗺️ Build Roadmap
 
 | Phase | Module | Description | Status |
 |-------|--------|-------------|--------|
 | **1** | Market Scanner | Scans stocks, scores setups, returns top picks | ✅ Complete |
-| **2** | Technical Analysis / Signals | Generates full trade setups (entry, stop, targets) | ⬜ Planned |
+| **2** | Signals & Risk | Trade setups, position sizing, portfolio risk, journal | ✅ Complete |
 | **3** | News & Sentiment | Reads financial news, scores sentiment | ⬜ Planned |
-| **4** | Risk Manager | Position sizing, stop losses, portfolio limits | ⬜ Planned |
+| **4** | Risk Manager (Advanced) | Enhanced risk rules, trailing stops | ⬜ Planned |
 | **5** | Execution Engine | Places trades via Alpaca API | ⬜ Planned |
 | **6** | Learning Engine | ML model that learns from trade history | ⬜ Planned |
-| **7** | Dashboard & Journal | Streamlit dashboard, Telegram alerts, trade journal | ⬜ Planned |
+| **7** | Dashboard & Alerts | Streamlit dashboard, Telegram notifications | ⬜ Planned |
 
 ---
 
-### 📦 Dependencies (Module 1)
+## 📦 Dependencies
 
 | Package | Version | Purpose |
 |---------|---------|---------|

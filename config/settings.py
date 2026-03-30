@@ -124,3 +124,20 @@ SCORE_WEIGHTS = {
     "volume_surge": 2.0,        # Volume significantly above average
     "atr_favorable": 1.0,       # ATR indicates manageable volatility
 }
+
+# =============================================================================
+# 📈 SIGNAL GENERATOR SETTINGS — Module 2 configuration
+# =============================================================================
+
+# Take Profit multipliers relative to risk (R)
+# TP1 = entry + (TP1_MULTIPLIER × risk_per_share)  → close 50% of position
+# TP2 = entry + (TP2_MULTIPLIER × risk_per_share)  → close remaining 50%
+TP1_MULTIPLIER = 2.0
+TP2_MULTIPLIER = 3.0
+
+# =============================================================================
+# 📋 TRADE JOURNAL SETTINGS — Module 2 configuration
+# =============================================================================
+
+# Path to the trade journal CSV file
+JOURNAL_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trades.csv")
