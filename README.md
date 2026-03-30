@@ -40,20 +40,26 @@ TradingBot/
 │   ├── __init__.py
 │   └── watchlist.csv              # Stock universe (50 S&P 500 stocks)
 │
-├── execution/                     # Trade execution (Module 5 — placeholder)
+├── execution/                     # Trade execution (Module 5)
+│   ├── __init__.py
+│   ├── broker.py                  # Broker interface & paper trading simulator
+│   ├── orders.py                  # Order lifecycle manager (signal → fill)
+│   └── monitor.py                 # Position monitoring & auto-exits
 ├── dashboard/                     # Dashboard & alerts (Module 7 — placeholder)
 │
 ├── tests/
 │   ├── test_module1.py            # 24 tests: scanner, indicators, utils
 │   ├── test_module2.py            # 40 tests: signals, position sizing, risk, journal
 │   ├── test_module3.py            # 51 tests: news sentiment, macro sector analysis
-│   └── test_module4.py            # 59 tests: trailing stops, risk manager, drawdown
+│   ├── test_module4.py            # 59 tests: trailing stops, risk manager, drawdown
+│   └── test_module5.py            # 56 tests: broker, orders, monitor, integration
 │
 ├── docs/
 │   ├── module1_market_scanner.md          # Module 1 detailed documentation
 │   ├── module2_signals_risk_journal.md    # Module 2 detailed documentation
 │   ├── module3_news_sentiment.md          # Module 3 detailed documentation
-│   └── module4_risk_manager.md            # Module 4 detailed documentation
+│   ├── module4_risk_manager.md            # Module 4 detailed documentation
+│   └── module5_execution.md               # Module 5 detailed documentation
 │
 ├── .gitignore
 ├── requirements.txt
@@ -116,6 +122,28 @@ decision = rm.evaluate_trade("AAPL", entry_price=150, stop_loss=144,
                              sector="Technology")
 ```
 
+### Module 5 — Execution Engine (Phase 5) ✅
+
+**Files:** `execution/broker.py`, `execution/orders.py`, `execution/monitor.py`  
+**Docs:** [`docs/module5_execution.md`](docs/module5_execution.md)
+
+The execution engine that bridges signals to order placement. Includes a paper trading broker simulator, order lifecycle manager (signal → risk gate → fill → registration), and automatic position monitoring with trailing stop exits, TP1 partial closes (50%), and TP2 full exits.
+
+```python
+from execution.broker import get_broker
+from execution.orders import OrderManager
+from execution.monitor import PositionMonitor
+from risk.risk_manager import RiskManager
+
+rm = RiskManager(account_balance=10000)
+broker = get_broker(account_balance=10000)
+om = OrderManager(rm, broker)
+monitor = PositionMonitor(om, rm)
+
+result = om.execute_signal(signal, sector="Technology")
+actions = monitor.check_all_positions({"AAPL": {"price": 162.0}})
+```
+
 ---
 
 ## 🚀 Getting Started
@@ -147,7 +175,7 @@ cp config/.env.example config/.env
 ### Running Tests
 
 ```bash
-# Run all tests (174 total)
+# Run all tests (230 total)
 python -m pytest tests/ -v
 
 # Module 1 only (24 tests)
@@ -161,6 +189,9 @@ python -m pytest tests/test_module3.py -v
 
 # Module 4 only (59 tests)
 python -m pytest tests/test_module4.py -v
+
+# Module 5 only (56 tests)
+python -m pytest tests/test_module5.py -v
 ```
 
 ---
@@ -191,7 +222,7 @@ python -m pytest tests/test_module4.py -v
 | **2** | Signals & Risk | Trade setups, position sizing, portfolio risk, journal | ✅ Complete |
 | **3** | News & Sentiment | News sentiment analysis, sector rotation detection | ✅ Complete |
 | **4** | Risk Manager (Advanced) | Trailing stops, sector concentration, drawdown monitoring | ✅ Complete |
-| **5** | Execution Engine | Places trades via Alpaca API | ⬜ Planned |
+| **5** | Execution Engine | Paper trading broker, order lifecycle, position monitoring | ✅ Complete |
 | **6** | Learning Engine | ML model that learns from trade history | ⬜ Planned |
 | **7** | Dashboard & Alerts | Streamlit dashboard, Telegram notifications | ⬜ Planned |
 

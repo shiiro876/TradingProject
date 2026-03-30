@@ -233,3 +233,16 @@ MAX_DRAWDOWN_PCT = 0.15  # 15% drawdown from peak → halt trading
 
 # Minimum account balance threshold (absolute floor — never trade below this)
 MIN_ACCOUNT_BALANCE = 500.0  # Safety floor in dollars
+
+# =============================================================================
+# 🚀 EXECUTION ENGINE SETTINGS — Module 5 configuration
+# =============================================================================
+
+# Default order type for market entries
+DEFAULT_ORDER_TYPE = "market"
+
+# Monitoring interval in seconds (how often to check positions for exits)
+MONITOR_INTERVAL_SECONDS = 60
+
+# Partial close ratio at TP1: close this fraction of shares at first target
+TP1_CLOSE_RATIO = 0.50  # Close 50% at TP1, keep 50% running to TP2
