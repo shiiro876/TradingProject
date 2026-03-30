@@ -7,6 +7,10 @@
 #   - pandas-ta: Technical analysis indicators (RSI, MACD, Bollinger, etc.)
 #   - numpy: Numerical computations
 #   - python-dotenv: Loads environment variables from .env file
+#
+# Module 3 (News & Sentiment) dependencies:
+#   - vaderSentiment: Lexicon-based sentiment analysis tuned for financial text
+#   - requests: HTTP library for calling external APIs (NewsAPI)
 # =============================================================================
 
 yfinance>=0.2.36
@@ -14,3 +18,5 @@ pandas>=2.0.0
 pandas-ta>=0.3.14b1
 numpy>=1.24.0
 python-dotenv>=1.0.0
+vaderSentiment>=3.3.2
+requests>=2.31.0

@@ -141,3 +141,60 @@ TP2_MULTIPLIER = 3.0
 
 # Path to the trade journal CSV file
 JOURNAL_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trades.csv")
+
+# =============================================================================
+# 📰 NEWS & SENTIMENT SETTINGS — Module 3 configuration
+# =============================================================================
+
+# Sentiment score thresholds (VADER compound score ranges from -1.0 to +1.0)
+SENTIMENT_POSITIVE_THRESHOLD = 0.20    # Above this = POSITIVE
+SENTIMENT_NEGATIVE_THRESHOLD = -0.20   # Below this = NEGATIVE
+# Between the two = NEUTRAL
+
+# Number of headlines to fetch per stock from NewsAPI
+NEWS_MAX_HEADLINES = 10
+
+# Major event keyword categories for detection
+# If a headline contains any of these keywords, it's flagged as a major event
+MAJOR_EVENT_KEYWORDS = {
+    "earnings": ["earnings", "quarterly results", "profit", "revenue beat",
+                 "revenue miss", "EPS", "guidance"],
+    "analyst": ["upgrade", "downgrade", "price target", "buy rating",
+                "sell rating", "overweight", "underweight", "outperform"],
+    "merger": ["merger", "acquisition", "acquire", "takeover", "buyout",
+               "deal", "joint venture"],
+    "sector": ["oil supply", "oil price", "interest rate", "fed rate",
+               "inflation", "recession", "tariff", "sanctions", "regulation"],
+}
+
+# =============================================================================
+# 🌐 MACRO / SECTOR ROTATION SETTINGS — Module 3 configuration
+# =============================================================================
+
+# Sector ETF tickers used for macro/sector analysis
+# Maps sector names to their corresponding SPDR ETF symbols
+SECTOR_ETFS = {
+    "Energy": "XLE",
+    "Technology": "XLK",
+    "Industrials": "XLI",
+    "Consumer Staples": "XLP",
+    "Healthcare": "XLV",
+    "Utilities": "XLU",
+    "Financials": "XLF",
+    "Consumer Discretionary": "XLY",
+    "Communication Services": "XLC",
+    "Materials": "XLB",
+}
+
+# Periods for sector performance comparison
+SECTOR_PERFORMANCE_PERIODS = {
+    "1_week": 5,     # 5 trading days
+    "1_month": 21,   # ~21 trading days
+}
+
+# Threshold for flagging a sector as "strong" or "weak"
+SECTOR_STRONG_THRESHOLD = 2.0    # Sector return > +2% = strong
+SECTOR_WEAK_THRESHOLD = -2.0     # Sector return < -2% = weak
+
+# Minimum rank change to flag sector rotation
+SECTOR_ROTATION_MIN_CHANGE = 3   # Must move ≥3 ranks to flag rotation

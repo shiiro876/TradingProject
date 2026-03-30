@@ -16,7 +16,9 @@ TradingBot/
 │   ├── utils.py                   # Market data pipeline (yfinance)
 │   ├── indicators.py              # Technical indicator calculations
 │   ├── scanner.py                 # Stock scanning, scoring & ranking
-│   └── signals.py                 # Trade signal generator (entry/stop/targets)
+│   ├── signals.py                 # Trade signal generator (entry/stop/targets)
+│   ├── news.py                    # News sentiment analysis (VADER)
+│   └── macro.py                   # Sector rotation & macro analysis
 │
 ├── risk/                          # Risk management
 │   ├── __init__.py
@@ -41,11 +43,13 @@ TradingBot/
 │
 ├── tests/
 │   ├── test_module1.py            # 24 tests: scanner, indicators, utils
-│   └── test_module2.py            # 40 tests: signals, position sizing, risk, journal
+│   ├── test_module2.py            # 40 tests: signals, position sizing, risk, journal
+│   └── test_module3.py            # 51 tests: news sentiment, macro sector analysis
 │
 ├── docs/
-│   ├── module1_market_scanner.md  # Module 1 detailed documentation
-│   └── module2_signals_risk_journal.md  # Module 2 detailed documentation
+│   ├── module1_market_scanner.md          # Module 1 detailed documentation
+│   ├── module2_signals_risk_journal.md    # Module 2 detailed documentation
+│   └── module3_news_sentiment.md          # Module 3 detailed documentation
 │
 ├── .gitignore
 ├── requirements.txt
@@ -79,6 +83,21 @@ Generates complete trade setups (entry, stop loss, TP1, TP2, R:R ratio), calcula
 python -m core.signals
 ```
 
+### Module 3 — News & Sentiment + Macro Sector Analysis (Phase 3) ✅
+
+**Files:** `core/news.py`, `core/macro.py`  
+**Docs:** [`docs/module3_news_sentiment.md`](docs/module3_news_sentiment.md)
+
+Fetches financial news headlines and scores sentiment using VADER analysis (POSITIVE / NEGATIVE / NEUTRAL). Detects major events (earnings, analyst upgrades, mergers, geopolitical events). Tracks 10 sector ETFs, ranks sectors by performance, detects sector rotation, and provides score adjustments for stocks in strong/weak sectors.
+
+```bash
+# News sentiment (requires NEWS_API_KEY in config/.env)
+python -m core.news
+
+# Sector / macro analysis
+python -m core.macro
+```
+
 ---
 
 ## 🚀 Getting Started
@@ -110,7 +129,7 @@ cp config/.env.example config/.env
 ### Running Tests
 
 ```bash
-# Run all tests (64 total)
+# Run all tests (115 total)
 python -m pytest tests/ -v
 
 # Module 1 only (24 tests)
@@ -118,6 +137,9 @@ python -m pytest tests/test_module1.py -v
 
 # Module 2 only (40 tests)
 python -m pytest tests/test_module2.py -v
+
+# Module 3 only (51 tests)
+python -m pytest tests/test_module3.py -v
 ```
 
 ---
@@ -142,7 +164,7 @@ python -m pytest tests/test_module2.py -v
 |-------|--------|-------------|--------|
 | **1** | Market Scanner | Scans stocks, scores setups, returns top picks | ✅ Complete |
 | **2** | Signals & Risk | Trade setups, position sizing, portfolio risk, journal | ✅ Complete |
-| **3** | News & Sentiment | Reads financial news, scores sentiment | ⬜ Planned |
+| **3** | News & Sentiment | News sentiment analysis, sector rotation detection | ✅ Complete |
 | **4** | Risk Manager (Advanced) | Enhanced risk rules, trailing stops | ⬜ Planned |
 | **5** | Execution Engine | Places trades via Alpaca API | ⬜ Planned |
 | **6** | Learning Engine | ML model that learns from trade history | ⬜ Planned |
@@ -159,4 +181,6 @@ python -m pytest tests/test_module2.py -v
 | `pandas-ta` | ≥0.3.14b1 | Technical analysis indicator library |
 | `numpy` | ≥1.24.0 | Numerical computations |
 | `python-dotenv` | ≥1.0.0 | Environment variable management |
+| `vaderSentiment` | ≥3.3.2 | Lexicon-based sentiment analysis (VADER) |
+| `requests` | ≥2.31.0 | HTTP client for external API calls (NewsAPI) |
 | `pytest` | (dev) | Test framework |
