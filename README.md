@@ -27,9 +27,12 @@ TradingBot/
 │   ├── trailing_stop.py           # Trailing stop manager (ATR/pct/breakeven)
 │   └── risk_manager.py            # Master risk orchestrator (discipline engine)
 │
-├── learning/                      # Learning & journaling
+├── learning/                      # Learning engine
 │   ├── __init__.py
-│   └── journal.py                 # Automated trade journal + performance stats
+│   ├── journal.py                 # Automated trade journal + performance stats
+│   ├── trainer.py                 # ML trade quality predictor (Module 6)
+│   ├── backtester.py              # Historical strategy backtester (Module 6)
+│   └── optimizer.py               # Strategy parameter optimizer (Module 6)
 │
 ├── config/                        # Configuration
 │   ├── __init__.py
@@ -52,14 +55,16 @@ TradingBot/
 │   ├── test_module2.py            # 40 tests: signals, position sizing, risk, journal
 │   ├── test_module3.py            # 51 tests: news sentiment, macro sector analysis
 │   ├── test_module4.py            # 59 tests: trailing stops, risk manager, drawdown
-│   └── test_module5.py            # 56 tests: broker, orders, monitor, integration
+│   ├── test_module5.py            # 56 tests: broker, orders, monitor, integration
+│   └── test_module6.py            # 48 tests: trainer, backtester, optimizer, integration
 │
 ├── docs/
 │   ├── module1_market_scanner.md          # Module 1 detailed documentation
 │   ├── module2_signals_risk_journal.md    # Module 2 detailed documentation
 │   ├── module3_news_sentiment.md          # Module 3 detailed documentation
 │   ├── module4_risk_manager.md            # Module 4 detailed documentation
-│   └── module5_execution.md               # Module 5 detailed documentation
+│   ├── module5_execution.md               # Module 5 detailed documentation
+│   └── module6_learning_engine.md         # Module 6 detailed documentation
 │
 ├── .gitignore
 ├── requirements.txt
@@ -144,6 +149,34 @@ result = om.execute_signal(signal, sector="Technology")
 actions = monitor.check_all_positions({"AAPL": {"price": 162.0}})
 ```
 
+### Module 6 — Learning Engine (Phase 6) ✅
+
+**Files:** `learning/trainer.py`, `learning/backtester.py`, `learning/optimizer.py`  
+**Docs:** [`docs/module6_learning_engine.md`](docs/module6_learning_engine.md)
+
+The AI brain that learns from every trade. Trains a RandomForest classifier on historical trade outcomes to predict win probability for new signals. Includes a walk-forward backtester that replays historical OHLCV data through the trading pipeline, and a grid-search optimizer to find the best strategy parameters.
+
+```python
+from learning.trainer import TradeTrainer
+from learning.backtester import Backtester
+from learning.optimizer import StrategyOptimizer
+
+# Train ML model on trade history
+trainer = TradeTrainer()
+trainer.train()
+prediction = trainer.predict(signal)
+
+# Backtest on historical data
+bt = Backtester(account_balance=10000)
+bt.run({"AAPL": df_aapl}, min_score=5.0)
+bt.print_backtest_report()
+
+# Optimize parameters
+optimizer = StrategyOptimizer(symbol_data=data)
+optimizer.optimize({"atr_stop_multiplier": [1.5, 2.0, 2.5]})
+print(optimizer.get_best_params())
+```
+
 ---
 
 ## 🚀 Getting Started
@@ -175,7 +208,7 @@ cp config/.env.example config/.env
 ### Running Tests
 
 ```bash
-# Run all tests (230 total)
+# Run all tests (278 total)
 python -m pytest tests/ -v
 
 # Module 1 only (24 tests)
@@ -192,6 +225,9 @@ python -m pytest tests/test_module4.py -v
 
 # Module 5 only (56 tests)
 python -m pytest tests/test_module5.py -v
+
+# Module 6 only (48 tests)
+python -m pytest tests/test_module6.py -v
 ```
 
 ---
@@ -223,7 +259,7 @@ python -m pytest tests/test_module5.py -v
 | **3** | News & Sentiment | News sentiment analysis, sector rotation detection | ✅ Complete |
 | **4** | Risk Manager (Advanced) | Trailing stops, sector concentration, drawdown monitoring | ✅ Complete |
 | **5** | Execution Engine | Paper trading broker, order lifecycle, position monitoring | ✅ Complete |
-| **6** | Learning Engine | ML model that learns from trade history | ⬜ Planned |
+| **6** | Learning Engine | ML trade predictor, backtester, parameter optimizer | ✅ Complete |
 | **7** | Dashboard & Alerts | Streamlit dashboard, Telegram notifications | ⬜ Planned |
 
 ---
@@ -239,4 +275,5 @@ python -m pytest tests/test_module5.py -v
 | `python-dotenv` | ≥1.0.0 | Environment variable management |
 | `vaderSentiment` | ≥3.3.2 | Lexicon-based sentiment analysis (VADER) |
 | `requests` | ≥2.31.0 | HTTP client for external API calls (NewsAPI) |
+| `scikit-learn` | ≥1.3.0 | Machine learning (RandomForest classifier) |
 | `pytest` | (dev) | Test framework |

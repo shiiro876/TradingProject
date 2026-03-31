@@ -246,3 +246,19 @@ MONITOR_INTERVAL_SECONDS = 60
 
 # Partial close ratio at TP1: close this fraction of shares at first target
 TP1_CLOSE_RATIO = 0.50  # Close 50% at TP1, keep 50% running to TP2
+
+# =============================================================================
+# 🧠 LEARNING ENGINE SETTINGS — Module 6 configuration
+# =============================================================================
+
+# Minimum number of historical trades before ML model training is useful
+MIN_TRADES_FOR_TRAINING = 10
+
+# Default model file path for persistence
+MODEL_SAVE_PATH = os.path.join(os.path.dirname(__file__), "..", "data", "trade_model.pkl")
+
+# Default backtest period (number of trading bars to simulate)
+BACKTEST_DEFAULT_MIN_SCORE = 5.0
+
+# Optimizer: maximum number of parameter combinations to test
+OPTIMIZER_MAX_COMBINATIONS = 500
