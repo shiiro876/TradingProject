@@ -262,3 +262,17 @@ BACKTEST_DEFAULT_MIN_SCORE = 5.0
 
 # Optimizer: maximum number of parameter combinations to test
 OPTIMIZER_MAX_COMBINATIONS = 500
+
+# =============================================================================
+# 🖥️ DASHBOARD & ALERTS SETTINGS — Module 7 configuration
+# =============================================================================
+
+# Maximum number of alerts to keep in memory
+ALERT_HISTORY_MAX = 200
+
+# Default number of recent trades to show in dashboard
+DASHBOARD_RECENT_TRADES = 10
+
+# Chart dimensions for console dashboard
+CHART_WIDTH = 60
+CHART_HEIGHT = 15

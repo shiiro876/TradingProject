@@ -48,7 +48,11 @@ TradingBot/
 │   ├── broker.py                  # Broker interface & paper trading simulator
 │   ├── orders.py                  # Order lifecycle manager (signal → fill)
 │   └── monitor.py                 # Position monitoring & auto-exits
-├── dashboard/                     # Dashboard & alerts (Module 7 — placeholder)
+├── dashboard/                     # Dashboard & alerts (Module 7)
+│   ├── __init__.py
+│   ├── app.py                     # Main dashboard (command center)
+│   ├── charts.py                  # Text-based chart generators
+│   └── alerts.py                  # Alert/notification manager (Telegram)
 │
 ├── tests/
 │   ├── test_module1.py            # 24 tests: scanner, indicators, utils
@@ -56,7 +60,8 @@ TradingBot/
 │   ├── test_module3.py            # 51 tests: news sentiment, macro sector analysis
 │   ├── test_module4.py            # 59 tests: trailing stops, risk manager, drawdown
 │   ├── test_module5.py            # 56 tests: broker, orders, monitor, integration
-│   └── test_module6.py            # 48 tests: trainer, backtester, optimizer, integration
+│   ├── test_module6.py            # 48 tests: trainer, backtester, optimizer, integration
+│   └── test_module7.py            # 70 tests: dashboard, charts, alerts, integration
 │
 ├── docs/
 │   ├── module1_market_scanner.md          # Module 1 detailed documentation
@@ -64,7 +69,8 @@ TradingBot/
 │   ├── module3_news_sentiment.md          # Module 3 detailed documentation
 │   ├── module4_risk_manager.md            # Module 4 detailed documentation
 │   ├── module5_execution.md               # Module 5 detailed documentation
-│   └── module6_learning_engine.md         # Module 6 detailed documentation
+│   ├── module6_learning_engine.md         # Module 6 detailed documentation
+│   └── module7_dashboard_alerts.md       # Module 7 detailed documentation
 │
 ├── .gitignore
 ├── requirements.txt
@@ -177,6 +183,33 @@ optimizer.optimize({"atr_stop_multiplier": [1.5, 2.0, 2.5]})
 print(optimizer.get_best_params())
 ```
 
+### Module 7 — Dashboard & Alerts (Phase 7) ✅
+
+**Files:** `dashboard/app.py`, `dashboard/charts.py`, `dashboard/alerts.py`  
+**Docs:** [`docs/module7_dashboard_alerts.md`](docs/module7_dashboard_alerts.md)
+
+The command center that aggregates all system data into a unified view. Displays account status, open positions, performance stats, ML model status, and alerts. Includes ASCII chart generators (equity curve, P&L bars, drawdown, sparklines) and a Telegram notification system with severity-based alerts (INFO/WARNING/CRITICAL).
+
+```python
+from dashboard.app import Dashboard
+from dashboard.charts import render_equity_curve, render_pnl_bars
+from dashboard.alerts import AlertManager
+
+# Full system dashboard
+dash = Dashboard(risk_manager=rm, broker=broker, journal=journal,
+                 trainer=trainer, alert_manager=alerts)
+dash.print_dashboard()
+
+# ASCII charts
+print(render_equity_curve(backtester.get_equity_curve()))
+print(render_pnl_bars(stats["monthly_pnl"]))
+
+# Alerts with Telegram notifications
+alerts = AlertManager()
+alerts.alert_trade_fill("AAPL", "buy", 33, 150.0)
+alerts.alert_drawdown_warning(12.5)
+```
+
 ---
 
 ## 🚀 Getting Started
@@ -208,7 +241,7 @@ cp config/.env.example config/.env
 ### Running Tests
 
 ```bash
-# Run all tests (278 total)
+# Run all tests (348 total)
 python -m pytest tests/ -v
 
 # Module 1 only (24 tests)
@@ -228,6 +261,9 @@ python -m pytest tests/test_module5.py -v
 
 # Module 6 only (48 tests)
 python -m pytest tests/test_module6.py -v
+
+# Module 7 only (70 tests)
+python -m pytest tests/test_module7.py -v
 ```
 
 ---
@@ -260,7 +296,7 @@ python -m pytest tests/test_module6.py -v
 | **4** | Risk Manager (Advanced) | Trailing stops, sector concentration, drawdown monitoring | ✅ Complete |
 | **5** | Execution Engine | Paper trading broker, order lifecycle, position monitoring | ✅ Complete |
 | **6** | Learning Engine | ML trade predictor, backtester, parameter optimizer | ✅ Complete |
-| **7** | Dashboard & Alerts | Streamlit dashboard, Telegram notifications | ⬜ Planned |
+| **7** | Dashboard & Alerts | Console dashboard, ASCII charts, Telegram notifications | ✅ Complete |
 
 ---
 
